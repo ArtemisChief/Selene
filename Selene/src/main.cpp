@@ -1,8 +1,8 @@
 #include <QGuiApplication>
-
 #include "Component/gl_window.hpp"
 
 int main(int argc, char *argv[]) {
+	
 	QGuiApplication app(argc, argv);
 
 	QSurfaceFormat surface_format;
@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
 	QSurfaceFormat::setDefaultFormat(surface_format);
 
 	GLWindow gl_window;
-	gl_window.resize(1360, 1020);
+	gl_window.resize(1280, 960);
 	gl_window.show();
 
 	return app.exec();

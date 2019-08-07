@@ -1,10 +1,15 @@
 #pragma once
 #include <QVector2D>;
+#include <QVector3D>
 #include <QOpenGLBuffer>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLExtraFunctions>
 
-#include "grid.hpp"
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
+#define RESOLUTION_X 640
+#define RESOLUTION_Y 480
 
 class Screen {
 
@@ -17,20 +22,17 @@ public:
 
 private:
 
-	QList<Grid> grids_;
-	QList<Grid> dirty_grids_list_;
+	const int grid_counts_ = RESOLUTION_X * RESOLUTION_Y;
 
 	// OpenGL函数
 	QOpenGLExtraFunctions *gl_functions_;
 
 	// 顶点缓存对象
-	QOpenGLVertexArrayObject *vao_;
-	QOpenGLBuffer *vbo_;
-	QOpenGLBuffer *ebo_;
-	QOpenGLBuffer *offset_vbo_;
-	QOpenGLBuffer *color_vbo_;
+	QOpenGLVertexArrayObject vao_;
+	QOpenGLBuffer ebo_;
+	QOpenGLBuffer color_vbo_;
 
-	// Grid颜色数组
-	QVector3D* grid_colors_;
+	cv::VideoCapture *capture_;
+	cv::Mat current_mat_;
 
 };

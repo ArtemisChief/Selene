@@ -19,5 +19,6 @@ private:
 	short color_r_;
 	short color_g_;
 	short color_b_;
+	bool is_dirty_;
 
 };

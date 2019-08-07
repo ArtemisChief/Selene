@@ -1,7 +1,7 @@
 #include "grid.hpp"
 
 
-Grid::Grid() : color_r_(0), color_g_(0), color_b_(0) {
+Grid::Grid() : color_r_(0), color_g_(0), color_b_(0), is_dirty_(false) {
 }
 
 Grid::~Grid() {

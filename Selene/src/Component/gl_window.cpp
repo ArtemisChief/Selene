@@ -39,7 +39,7 @@ void GLWindow::initializeGL() {
 	// 获得Uniform位置
 	uniform_camera_location_ = shader_program_->uniformLocation("cameraMatrix");
 	uniform_projection_location_ = shader_program_->uniformLocation("projectionMatrix");
-	uniform_color_location_ = shader_program_->uniformLocation("color");
+	//uniform_color_location_ = shader_program_->uniformLocation("color");
 
 	// 开启多重采样抗锯齿
 	gl_functions->glEnable(GL_MULTISAMPLE);
@@ -59,11 +59,11 @@ void GLWindow::initializeGL() {
 	QVector2D offsets[10800];
 	auto index = 0;
 	const auto offset = 1.0f;
-	for (auto y = -945; y < 945; y += 21) {
+	for (auto y = 945; y > -945; y -= 21) {
 		for (auto x = -1260; x < 1260; x += 21) {
 			QVector2D translation;
 			translation.setX(static_cast<float>(x) / 10.0f + offset);
-			translation.setY(static_cast<float>(y) / 10.0f + offset);
+			translation.setY(static_cast<float>(y) / 10.0f - offset);
 			offsets[index++] = translation;
 		}
 	}
@@ -123,7 +123,7 @@ void GLWindow::paintGL() {
 
 	if (is_uniforms_dirty_) {
 		is_uniforms_dirty_ = false;
-		shader_program_->setUniformValue(uniform_color_location_, QVector3D(1.0, 1.0, 1.0));
+		//shader_program_->setUniformValue(uniform_color_location_, QVector3D(1.0, 1.0, 1.0));
 		shader_program_->setUniformValue(uniform_projection_location_, m_projection_);
 		shader_program_->setUniformValue(uniform_camera_location_, m_camera_);
 		std::cout << "uniforms is dirty" << std::endl;
@@ -131,7 +131,7 @@ void GLWindow::paintGL() {
 
 	vao_->bind();
 	gl_extra_functions->glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, 10800);
-	//vao_->release();
+	vao_->release();
 
 	update();
 }

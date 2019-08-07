@@ -1,7 +1,7 @@
 #include "grid.hpp"
 
 
-Grid::Grid() : color_r_(0), color_g_(0), color_b_(0), is_dirty_(false) {
+Grid::Grid(const short x, const short y) : x_(x), y_(y), color_r_(255), color_g_(255), color_b_(255), is_dirty_(false) {
 }
 
 Grid::~Grid() {
@@ -33,4 +33,12 @@ void Grid::SetColorRgb(const QVector3D rgb) {
 
 QVector3D Grid::GetNormalizedRgb() const {
 	return QVector3D(color_r_, color_g_, color_b_) /= 255;
+}
+
+short Grid::GetX() const {
+	return x_;
+}
+
+short Grid::GetY() const {
+	return y_;
 }

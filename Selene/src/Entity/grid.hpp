@@ -4,7 +4,8 @@
 class Grid {
 
 public:
-	Grid();
+
+	Grid(const short x, const short y);
 	~Grid();
 
 	void SetColorR(const short value);
@@ -15,10 +16,18 @@ public:
 
 	QVector3D GetNormalizedRgb() const;
 
+	short GetX() const;
+	short GetY() const;
+
 private:
+
+	const short x_;
+	const short y_;
+
 	short color_r_;
 	short color_g_;
 	short color_b_;
+
 	bool is_dirty_;
 
 };

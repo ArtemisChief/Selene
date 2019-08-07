@@ -13,8 +13,6 @@ public:
 	Screen(QOpenGLContext *context);
 	~Screen();
 
-	QOpenGLVertexArrayObject* GetVao() const;
-
 	void DrawGrids();
 
 private:
@@ -22,8 +20,8 @@ private:
 	QList<Grid> grids_;
 	QList<Grid> dirty_grids_list_;
 
-	// OpenGL上下文
-	QOpenGLContext *context_;
+	// OpenGL函数
+	QOpenGLExtraFunctions *gl_functions_;
 
 	// 顶点缓存对象
 	QOpenGLVertexArrayObject *vao_;
@@ -32,10 +30,7 @@ private:
 	QOpenGLBuffer *offset_vbo_;
 	QOpenGLBuffer *color_vbo_;
 
-	// Grid顶点坐标与偏移量
-	float* grid_vertices_;
-	unsigned int* grid_indices_;
-	QVector2D* grid_offsets_;
+	// Grid颜色数组
 	QVector3D* grid_colors_;
 
 };

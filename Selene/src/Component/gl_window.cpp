@@ -44,8 +44,8 @@ void GLWindow::initializeGL() {
 }
 
 void GLWindow::resizeGL(const int w, const int h) {
-	m_projection_.setColumn(0, QVector4D(10.8f / w, 0, 0, 0));
-	m_projection_.setColumn(1, QVector4D(0, 10.8f / h, 0, 0));
+	m_projection_.setColumn(0, QVector4D(11.06f / w, 0, 0, 0));
+	m_projection_.setColumn(1, QVector4D(0, 11.06f / h, 0, 0));
 	m_projection_.setColumn(2, QVector4D(0, 0, 1, 0));
 	m_projection_.setColumn(3, QVector4D(0, 0, 0, 1));
 	is_uniforms_dirty_ = true;
@@ -64,12 +64,9 @@ void GLWindow::paintGL() {
 		is_uniforms_dirty_ = false;
 		shader_program_->setUniformValue(uniform_projection_location_, m_projection_);
 		shader_program_->setUniformValue(uniform_camera_location_, m_camera_);
-		std::cout << "uniforms is dirty" << std::endl;
 	}
 
-	screen_->GetVao()->bind();
-	gl_extra_functions->glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, 10800);
-	screen_->GetVao()->release();
+	screen_->DrawGrids();
 
 	update();
 }

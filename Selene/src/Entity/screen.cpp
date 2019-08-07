@@ -9,33 +9,33 @@ Screen::Screen(QOpenGLContext *context) {
 		}
 	}
 
-	// 获取OpenGL上下文
-	context_ = context;
+	// 获取OpenGL函数
+	gl_functions_ = context->extraFunctions();
 
-	// 设置Grid顶点坐标
-	grid_vertices_ = new float[8] {
-		1.0f,  1.0f,  // top right
-		1.0f, -1.0f,  // bottom right
-	   -1.0f, -1.0f,  // bottom left
-	   -1.0f,  1.0f,  // top left  
+	// 设置Grid顶点坐标（顺时针顺序）
+	float grid_vertices[8] = {
+		1.0f,  1.0f,  // 右上
+		1.0f, -1.0f,  // 右下
+	   -1.0f, -1.0f,  // 左下
+	   -1.0f,  1.0f,  // 左上  
 	};
 
 	// 设置Grid Indices
-	grid_indices_ = new unsigned int[6] {
-		0, 1, 3,  // first Triangle
-		1, 2, 3   // second Triangle
+	unsigned int grid_indices[6] = {
+		0, 1, 3,  // 第一个三角形
+		1, 2, 3   // 第二个三角形
 	};
 
 	// 设置Grid实例化渲染中每一个Grid的偏移量
-	grid_offsets_ = new QVector2D[10800];
+	QVector2D grid_offsets[10800];
 	auto index = 0;
-	const auto offset = 1.0f;
-	for (auto y = 945; y > -945; y -= 21) {
-		for (auto x = -1260; x < 1260; x += 21) {
+	const auto offset = 1.025f;
+	for (auto y = 9225; y > -9225; y -= 205) {
+		for (auto x = -12300; x < 12300; x += 205) {
 			QVector2D translation;
-			translation.setX(static_cast<float>(x) / 10.0f + offset);
-			translation.setY(static_cast<float>(y) / 10.0f - offset);
-			grid_offsets_[index++] = translation;
+			translation.setX(static_cast<float>(x) / 100.0f + offset);
+			translation.setY(static_cast<float>(y) / 100.0f - offset);
+			grid_offsets[index++] = translation;
 		}
 	}
 
@@ -44,7 +44,7 @@ Screen::Screen(QOpenGLContext *context) {
 	offset_vbo_->create();
 	offset_vbo_->bind();
 	offset_vbo_->setUsagePattern(QOpenGLBuffer::StaticDraw);
-	offset_vbo_->allocate(grid_offsets_, sizeof(QVector2D) * 10800);
+	offset_vbo_->allocate(grid_offsets, sizeof grid_offsets);
 	offset_vbo_->release();
 
 	// 设置Grid实例化渲染中每一个Grid的颜色
@@ -61,6 +61,7 @@ Screen::Screen(QOpenGLContext *context) {
 	color_vbo_->setUsagePattern(QOpenGLBuffer::StreamDraw);
 	color_vbo_->allocate(grid_colors_, sizeof(QVector3D) * 10800);
 	color_vbo_->release();
+	delete[] grid_colors_;
 
 	// 设置顶点坐标数组对象与Buffer
 	vao_ = new QOpenGLVertexArrayObject;
@@ -71,31 +72,33 @@ Screen::Screen(QOpenGLContext *context) {
 	vbo_->create();
 	vbo_->bind();
 	vbo_->setUsagePattern(QOpenGLBuffer::StaticDraw);
-	vbo_->allocate(grid_vertices_, sizeof(float) * 8);
+	vbo_->allocate(grid_vertices, sizeof grid_vertices);
 
 	ebo_ = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
 	ebo_->create();
 	ebo_->bind();
 	ebo_->setUsagePattern(QOpenGLBuffer::StaticDraw);
-	ebo_->allocate(grid_indices_, sizeof(unsigned int) * 6);
+	ebo_->allocate(grid_indices, sizeof grid_indices);
 
-	auto gl_functions = context_->extraFunctions();
+	// 设置顶点属性-坐标
+	gl_functions_->glEnableVertexAttribArray(0);
+	gl_functions_->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), static_cast<void*>(nullptr));
 
-	gl_functions->glEnableVertexAttribArray(0);
-	gl_functions->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), static_cast<void*>(nullptr));
-
-	gl_functions->glEnableVertexAttribArray(1);
+	// 设置顶点属性-偏移量
+	gl_functions_->glEnableVertexAttribArray(1);
 	offset_vbo_->bind();
-	gl_functions->glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), static_cast<void*>(nullptr));
+	gl_functions_->glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), static_cast<void*>(nullptr));
 	offset_vbo_->release();
-	gl_functions->glVertexAttribDivisor(1, 1);
+	gl_functions_->glVertexAttribDivisor(1, 1);
 
-	gl_functions->glEnableVertexAttribArray(2);
+	// 设置顶点属性-颜色
+	gl_functions_->glEnableVertexAttribArray(2);
 	color_vbo_->bind();
-	gl_functions->glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(nullptr));
+	gl_functions_->glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(nullptr));
 	color_vbo_->release();
-	gl_functions->glVertexAttribDivisor(2, 1);
+	gl_functions_->glVertexAttribDivisor(2, 1);
 
+	ebo_->release();
 	vbo_->release();
 	vao_->release();
 }
@@ -108,10 +111,31 @@ Screen::~Screen() {
 	delete vao_;
 }
 
-QOpenGLVertexArrayObject* Screen::GetVao() const {
-	return vao_;
-}
-
+int i = 0;
 void Screen::DrawGrids() {
+	grids_[i++].SetColorRgb(255, 255, 255);
 
+	// 获取需更新的Grid
+	for (auto grid : grids_)
+		if (grid.IsDirty())
+			dirty_grids_list_.append(grid);
+
+	// 仅更新需要更新的Grid
+	color_vbo_->bind();
+	grid_colors_ = static_cast<QVector3D*>(gl_functions_->glMapBufferRange(GL_ARRAY_BUFFER, 0, sizeof(QVector3D) * 10800, GL_MAP_WRITE_BIT));
+	for (auto grid : dirty_grids_list_) {
+		const auto index = grid.GetY() * 120 + grid.GetX();
+		grid_colors_[index] = grid.GetNormalizedRgb();
+		grid.SetClear();
+	}
+	dirty_grids_list_.clear();
+	gl_functions_->glUnmapBuffer(GL_ARRAY_BUFFER);
+	color_vbo_->release();
+
+	// 绘制Grid
+	vao_->bind();
+	ebo_->bind();
+	gl_functions_->glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, 10800);
+	ebo_->release();
+	vao_->release();
 }

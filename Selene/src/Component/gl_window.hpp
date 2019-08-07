@@ -36,7 +36,4 @@ private:
 	// фад╩
 	Screen *screen_;
 
-private slots:
-
-
 };

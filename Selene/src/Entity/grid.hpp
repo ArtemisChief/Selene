@@ -8,9 +8,6 @@ public:
 	Grid(const short x, const short y);
 	~Grid();
 
-	void SetColorR(const short value);
-	void SetColorG(const short value);
-	void SetColorB(const short value);
 	void SetColorRgb(const short r, const short g, const short b);
 	void SetColorRgb(const QVector3D rgb);
 
@@ -18,6 +15,9 @@ public:
 
 	short GetX() const;
 	short GetY() const;
+
+	void SetClear();
+	bool IsDirty() const;
 
 private:
 

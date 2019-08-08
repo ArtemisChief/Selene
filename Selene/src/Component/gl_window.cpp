@@ -1,18 +1,18 @@
-#include <iostream>
 #include "gl_window.hpp"
-#include "src/Shader/glsl.hpp"
-#include "src/Entity/screen.hpp"
 
 GLWindow::GLWindow() : shader_program_(nullptr), uniform_camera_location_(0), uniform_projection_location_(0), zoom_(0),
                        camera_x_(0), camera_y_(0), is_uniforms_dirty_(true), screen_(nullptr), is_key_w_pressed_(false), 
 					   is_key_a_pressed_(false), is_key_s_pressed_(false), is_key_d_pressed_(false), is_key_q_pressed_(false),
-                       is_key_e_pressed_(false) {
+                       is_key_e_pressed_(false), should_close_(false) {
 	m_camera_.setToIdentity();
 	m_projection_.setToIdentity();
+
+	connect(this, SIGNAL(fps_time_out()), this, SLOT(update()));
 }
 
 GLWindow::~GLWindow() {
 	makeCurrent();
+	should_close_ = true;
 	delete shader_program_;
 }
 
@@ -75,6 +75,18 @@ void GLWindow::ProcessInput() {
 	}
 }
 
+void GLWindow::CalibrateFPS() {
+	const int nanoseconds_per_frame = 1.0 / FPS * 1000000;
+	const auto t1 = std::chrono::steady_clock::now();
+	
+	while (!should_close_) {
+		const auto t2 = std::chrono::steady_clock::now();
+		if (std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() % nanoseconds_per_frame <= 2000) {
+			emit fps_time_out();
+		}
+	}
+}
+
 void GLWindow::initializeGL() {
 
 	// 使用QOpenGL的ExtraFunctions而不是QOpenGLFunctions，以启用OpenGL3.0以上版本的功能
@@ -98,6 +110,8 @@ void GLWindow::initializeGL() {
 	// 初始化屏幕
 	screen_ = new Screen(QOpenGLContext::currentContext(), shader_program_);
 
+	// 开始校准FPS
+	QtConcurrent::run(this, &GLWindow::CalibrateFPS);
 }
 
 void GLWindow::resizeGL(const int w, const int h) {
@@ -114,8 +128,6 @@ void GLWindow::resizeGL(const int w, const int h) {
 }
 
 void GLWindow::paintGL() {
-	auto time = static_cast<double>(cv::getTickCount());
-
 	ProcessInput();
 
 	auto gl_extra_functions = QOpenGLContext::currentContext()->extraFunctions();
@@ -132,13 +144,6 @@ void GLWindow::paintGL() {
 	}
 
 	screen_->DrawGrids();
-
-	update();
-
-	time = (static_cast<double>(cv::getTickCount()) - time) / cv::getTickFrequency();
-	time = (1.0f / 60.0f - time) * 1000;
-	if (time > 0)
-		Sleep(time);
 }
 
 void GLWindow::keyPressEvent(QKeyEvent *key_event) {

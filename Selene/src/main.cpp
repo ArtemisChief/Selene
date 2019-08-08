@@ -2,7 +2,7 @@
 #include "Component/gl_window.hpp"
 
 int main(int argc, char *argv[]) {
-	
+
 	QGuiApplication app(argc, argv);
 
 	QSurfaceFormat surface_format;
@@ -21,4 +21,5 @@ int main(int argc, char *argv[]) {
 	gl_window.show();
 
 	return app.exec();
+
 }

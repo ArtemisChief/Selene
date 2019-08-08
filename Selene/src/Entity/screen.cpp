@@ -1,6 +1,9 @@
-#include "screen.hpp"
 #include <iostream>
+
+#include "screen.hpp"
 #include "grid.hpp"
+
+#include <QMediaPlayer>
 
 Screen::Screen(QOpenGLContext *context, QOpenGLShaderProgram *shader_program)
 {
@@ -94,6 +97,7 @@ Screen::Screen(QOpenGLContext *context, QOpenGLShaderProgram *shader_program)
 
 	vbo.release();
 	grid_vao_.release();
+
 }
 
 Screen::~Screen() {
@@ -110,12 +114,10 @@ bool Screen::GetIsPaused() const {
 void Screen::DrawGrids() {
 
 	if (!is_paused_) {
-
 		// 更新所有Grid颜色
 		grid_color_vbo_.bind();
 
 		const auto grid_colors = static_cast<QVector3D*>(gl_functions_->glMapBufferRange(GL_ARRAY_BUFFER, 0, sizeof(QVector3D) * grid_counts_, GL_MAP_WRITE_BIT));
-
 
 		capture_->read(current_mat_);
 		resize(current_mat_, current_mat_, cv::Size(RESOLUTION_X, RESOLUTION_Y));

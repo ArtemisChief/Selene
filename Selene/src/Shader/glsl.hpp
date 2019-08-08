@@ -7,10 +7,14 @@ static const char *vertex_shader_source =
 "layout (location = 2) in vec3 color;\n"
 "uniform mat4 projectionMatrix;\n"
 "uniform mat4 cameraMatrix;\n"
+"uniform bool isBorderColor;\n"
 "out vec3 fColor;\n"
 "void main() {\n"
 "   gl_Position = projectionMatrix * cameraMatrix * vec4(vertex + offset, 0.0, 1.0);\n"
-"   fColor = color;\n"
+"	if (isBorderColor)\n"
+"		fColor = vec3(0.0, 0.0, 0.0);\n"
+"	else\n"
+"		fColor = color;\n"
 "}\0";
 
 static const char *fragment_shader_source =

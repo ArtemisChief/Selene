@@ -1,6 +1,6 @@
 #pragma once
 #include <QOpenGLWindow>
-#include <QOpenGLShaderProgram>
+#include <QKeyEvent>
 #include "src/Entity/screen.hpp"
 
 class GLWindow : public QOpenGLWindow {
@@ -12,9 +12,16 @@ public:
 	GLWindow();
 	~GLWindow();
 
+	void ProcessInput();
+
+protected:
+
 	void initializeGL() override;
 	void resizeGL(int w, int h) override;
 	void paintGL() override;
+
+	void keyPressEvent(QKeyEvent *key_event) override;
+	void keyReleaseEvent(QKeyEvent*key_event) override;
 
 private:
 
@@ -30,10 +37,25 @@ private:
 	// 透视矩阵
 	QMatrix4x4 m_projection_;
 
+	// 缩放因子
+	int zoom_;
+
+	// 摄像机移动位置
+	int camera_x_;
+	int camera_y_;
+
 	// Uniform是否已写入值
 	bool is_uniforms_dirty_;
 
 	// 屏幕
 	Screen *screen_;
+
+	// 按键
+	bool is_key_w_pressed_;
+	bool is_key_a_pressed_;
+	bool is_key_s_pressed_;
+	bool is_key_d_pressed_;
+	bool is_key_q_pressed_;
+	bool is_key_e_pressed_;
 
 };

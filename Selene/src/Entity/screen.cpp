@@ -1,40 +1,52 @@
 #include "screen.hpp"
 #include <iostream>
 
-Screen::Screen(QOpenGLContext *context) {
+Screen::Screen(QOpenGLContext *context, QOpenGLShaderProgram *shader_program)
+{
+	// 获取OpenGL函数
+	gl_functions_ = context->extraFunctions();
+
+	// 获取着色器
+	shader_program_ = shader_program;
+
+	// 获取着色器Uniform位置
+	uniform_is_border_color_location_ = shader_program_->uniformLocation("isBorderColor");
 
 	// 获取视频
 	capture_ = new cv::VideoCapture("./BadApple.mp4");
 
-	// 获取OpenGL函数
-	gl_functions_ = context->extraFunctions();
+	// 网格线
+	show_grid_line_ = false;
+	gl_functions_->glLineWidth(0.1f);
 
 	// 设置Grid顶点坐标（顺时针顺序）
 	float grid_vertices[8] = {
-		1.0f,  1.0f,  // 右上
-		1.0f, -1.0f,  // 右下
-	   -1.0f, -1.0f,  // 左下
-	   -1.0f,  1.0f,  // 左上  
+		1.0f, 1.0f, // 右上
+		1.0f, -1.0f, // 右下
+		-1.0f, -1.0f, // 左下
+		-1.0f, 1.0f, // 左上  
 	};
 
 	// 设置Grid Indices
 	unsigned int grid_indices[6] = {
-		0, 1, 3,  // 第一个三角形
-		1, 2, 3   // 第二个三角形
+		0, 1, 3, // 第一个三角形
+		1, 2, 3 // 第二个三角形
 	};
 
 	// 设置Grid实例化渲染中每一个Grid的偏移量
 	const auto grid_offsets = new QVector2D[grid_counts_];
 	auto index = 0;
-	const auto distance = 201;
+	const auto distance = 2;
 	const auto range_x = RESOLUTION_X * distance / 2;
 	const auto range_y = RESOLUTION_Y * distance / 2;
-	const auto offset = static_cast<float>(distance) / 200.0f;
-	for (auto y = range_y; y > -range_y; y -= distance) {
-		for (auto x = -range_x; x < range_x; x += distance) {
+	const auto offset = static_cast<float>(distance) / 2.0f;
+	for (auto y = range_y; y > -range_y; y -= distance)
+	{
+		for (auto x = -range_x; x < range_x; x += distance)
+		{
 			QVector2D translation;
-			translation.setX(static_cast<float>(x) / 100.0f + offset);
-			translation.setY(static_cast<float>(y) / 100.0f - offset);
+			translation.setX(static_cast<float>(x) + offset);
+			translation.setY(static_cast<float>(y) - offset);
 			grid_offsets[index++] = translation;
 		}
 	}
@@ -46,12 +58,12 @@ Screen::Screen(QOpenGLContext *context) {
 	offset_vbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
 	offset_vbo.allocate(grid_offsets, sizeof(QVector2D) * grid_counts_);
 	offset_vbo.release();
+	delete[] grid_offsets;
 
 	// 设置Grid实例化渲染中每一个Grid的颜色初始为黑色
 	const auto grid_colors = new QVector3D[grid_counts_];
 	for (auto i = 0; i < grid_counts_; i++)
 		grid_colors[i++] = QVector3D(0.0f, 0.0f, 0.0f);
-
 
 	// 设置颜色Buffer
 	color_vbo_ = QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
@@ -99,7 +111,6 @@ Screen::Screen(QOpenGLContext *context) {
 	ebo_.release();
 	vbo.release();
 	vao_.release();
-
 }
 
 Screen::~Screen() {
@@ -109,30 +120,43 @@ void Screen::DrawGrids() {
 
 	// 更新所有Grid颜色
 	color_vbo_.bind();
+
 	const auto grid_colors = static_cast<QVector3D*>(gl_functions_->glMapBufferRange(GL_ARRAY_BUFFER, 0, sizeof(QVector3D) * grid_counts_, GL_MAP_WRITE_BIT));
-	
+
 	capture_->read(current_mat_);
 	resize(current_mat_, current_mat_, cv::Size(RESOLUTION_X, RESOLUTION_Y));
 
 	const auto mat_rows = current_mat_.rows;
 	const auto mat_cols = current_mat_.cols;
 	const uchar *pixel = current_mat_.data;
+
 	for (auto y = 0; y < mat_rows; y++) {
 		pixel = current_mat_.data + y * current_mat_.step;
-		for (auto x = 0; x < mat_cols; x++) {
-			grid_colors[y * RESOLUTION_X + x] = QVector3D(pixel[0], pixel[1], pixel[2]) / 255;
-			pixel += 3;
-		}
+		for (auto x = 0; x < mat_cols; x++)
+			grid_colors[y * RESOLUTION_X + x] = QVector3D(*pixel++, *pixel++, *pixel++) / 255;
 	}
 
 	gl_functions_->glUnmapBuffer(GL_ARRAY_BUFFER);
+
 	color_vbo_.release();
 
 	// 绘制Grid
 	vao_.bind();
 	ebo_.bind();
+
 	gl_functions_->glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, grid_counts_);
+
+	if (show_grid_line_) {
+		shader_program_->setUniformValue(uniform_is_border_color_location_, true);
+		gl_functions_->glDrawArraysInstanced(GL_LINE_LOOP, 0, 4, grid_counts_);
+		shader_program_->setUniformValue(uniform_is_border_color_location_, false);
+	}
+
 	ebo_.release();
 	vao_.release();
 
+}
+
+void Screen::ShowGridLine(const bool show_grid_line) {
+	show_grid_line_ = show_grid_line;
 }

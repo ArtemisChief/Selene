@@ -1,15 +1,12 @@
+#include <iostream>
 #include "gl_window.hpp"
 #include "src/Shader/glsl.hpp"
-
-#include <QOpenGLTexture>
-#include <QOpenGLShaderProgram>
-#include <QOpenGLExtraFunctions>
-#include <iostream>
 #include "src/Entity/screen.hpp"
 
-GLWindow::GLWindow() : shader_program_(nullptr), uniform_camera_location_(0), uniform_projection_location_(0),
-                       is_uniforms_dirty_(true), screen_(nullptr)
-{
+GLWindow::GLWindow() : shader_program_(nullptr), uniform_camera_location_(0), uniform_projection_location_(0), zoom_(0),
+                       camera_x_(0), camera_y_(0), is_uniforms_dirty_(true), screen_(nullptr), is_key_w_pressed_(false), 
+					   is_key_a_pressed_(false), is_key_s_pressed_(false), is_key_d_pressed_(false), is_key_q_pressed_(false),
+                       is_key_e_pressed_(false) {
 	m_camera_.setToIdentity();
 	m_projection_.setToIdentity();
 }
@@ -19,9 +16,66 @@ GLWindow::~GLWindow() {
 	delete shader_program_;
 }
 
-void GLWindow::initializeGL() {
+void GLWindow::ProcessInput() {
 
-	screen_ = new Screen(QOpenGLContext::currentContext());
+	if (is_key_w_pressed_) {
+		if (zoom_ > 60)
+			camera_y_ -= 1;
+		else
+			camera_y_ -= 5;
+		m_camera_.setToIdentity();
+		m_camera_.translate(camera_x_, camera_y_);
+		is_uniforms_dirty_ = true;
+	}
+	if (is_key_a_pressed_) {
+		if (zoom_ > 60)
+			camera_x_ += 1;
+		else
+			camera_x_ += 5;
+		m_camera_.setToIdentity();
+		m_camera_.translate(camera_x_, camera_y_);
+		is_uniforms_dirty_ = true;
+	}
+	if (is_key_s_pressed_) {
+		if (zoom_ > 60)
+			camera_y_ += 1;
+		else
+			camera_y_ += 5;
+		m_camera_.setToIdentity();
+		m_camera_.translate(camera_x_, camera_y_);
+		is_uniforms_dirty_ = true;
+	}
+	if (is_key_d_pressed_) {
+		if (zoom_ > 60)
+			camera_x_ -= 1;
+		else
+			camera_x_ -= 5;
+		m_camera_.setToIdentity();
+		m_camera_.translate(camera_x_, camera_y_);
+		is_uniforms_dirty_ = true;
+	}
+
+	if (is_key_e_pressed_) {
+		if (zoom_ < 20)
+			zoom_ += 2;
+		else if (zoom_ < 40)
+			zoom_ += 5;
+		else if (zoom_ < 480)
+			zoom_ += 10;
+		resizeGL(1280, 960);
+	}
+	else if (is_key_q_pressed_) {
+		if (zoom_ > 40)
+			zoom_ -= 10;
+		else if (zoom_ > 20)
+			zoom_ -= 5;
+		else if (zoom_ > 0)
+			zoom_ -= 2;
+		resizeGL(1280, 960);
+	}
+}
+
+void GLWindow::initializeGL() {
 
 	// 使用QOpenGL的ExtraFunctions而不是QOpenGLFunctions，以启用OpenGL3.0以上版本的功能
 	auto gl_functions = QOpenGLContext::currentContext()->extraFunctions();
@@ -41,23 +95,34 @@ void GLWindow::initializeGL() {
 	// 开启多重采样抗锯齿
 	gl_functions->glEnable(GL_MULTISAMPLE);
 
+	// 初始化屏幕
+	screen_ = new Screen(QOpenGLContext::currentContext(), shader_program_);
+
 }
 
 void GLWindow::resizeGL(const int w, const int h) {
-	m_projection_.setColumn(0, QVector4D(2.0f / w, 0, 0, 0));
-	m_projection_.setColumn(1, QVector4D(0, 2.0f / h, 0, 0));
+	if (zoom_ > 60)
+		screen_->ShowGridLine(true);
+	else
+		screen_->ShowGridLine(false);
+
+	m_projection_.setColumn(0, QVector4D((2.0f + zoom_ / 10.0) / w, 0, 0, 0));
+	m_projection_.setColumn(1, QVector4D(0, (2.0f + zoom_ / 10.0) / h, 0, 0));
 	m_projection_.setColumn(2, QVector4D(0, 0, 1, 0));
 	m_projection_.setColumn(3, QVector4D(0, 0, 0, 1));
 	is_uniforms_dirty_ = true;
 }
 
 void GLWindow::paintGL() {
+	auto time = static_cast<double>(cv::getTickCount());
+
+	ProcessInput();
 
 	auto gl_extra_functions = QOpenGLContext::currentContext()->extraFunctions();
 
 	gl_extra_functions->glClearColor(0, 0, 0, 1);
 	gl_extra_functions->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
+
 	shader_program_->bind();
 
 	if (is_uniforms_dirty_) {
@@ -69,4 +134,61 @@ void GLWindow::paintGL() {
 	screen_->DrawGrids();
 
 	update();
+
+	time = (static_cast<double>(cv::getTickCount()) - time) / cv::getTickFrequency();
+	time = (1.0f / 60.0f - time) * 1000;
+	if (time > 0)
+		Sleep(time);
+}
+
+void GLWindow::keyPressEvent(QKeyEvent *key_event) {
+	const auto key = key_event->key();
+	switch (key) {
+	case Qt::Key_E:
+		is_key_e_pressed_ = true;
+		break;
+	case Qt::Key_Q:
+		is_key_q_pressed_ = true;
+		break;
+	case Qt::Key_W:
+		is_key_w_pressed_ = true;
+		break;
+	case Qt::Key_A:
+		is_key_a_pressed_ = true;
+		break;
+	case Qt::Key_S:
+		is_key_s_pressed_ = true;
+		break;
+	case Qt::Key_D:
+		is_key_d_pressed_ = true;
+		break;
+	default:
+		break;
+	}
+}
+
+void GLWindow::keyReleaseEvent(QKeyEvent* key_event) {
+	const auto key = key_event->key();
+	switch (key) {
+	case Qt::Key_E:
+		is_key_e_pressed_ = false;
+		break;
+	case Qt::Key_Q:
+		is_key_q_pressed_ = false;
+		break;
+	case Qt::Key_W:
+		is_key_w_pressed_ = false;
+		break;
+	case Qt::Key_A:
+		is_key_a_pressed_ = false;
+		break;
+	case Qt::Key_S:
+		is_key_s_pressed_ = false;
+		break;
+	case Qt::Key_D:
+		is_key_d_pressed_ = false;
+		break;
+	default:
+		break;
+	}
 }

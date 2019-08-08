@@ -4,6 +4,7 @@
 #include <QOpenGLBuffer>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLExtraFunctions>
+#include <QOpenGLShaderProgram>
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -15,10 +16,11 @@ class Screen {
 
 public:
 
-	Screen(QOpenGLContext *context);
+	Screen(QOpenGLContext *context, QOpenGLShaderProgram *shader_program);
 	~Screen();
 
 	void DrawGrids();
+	void ShowGridLine(const bool show_grid_line);
 
 private:
 
@@ -27,12 +29,21 @@ private:
 	// OpenGL函数
 	QOpenGLExtraFunctions *gl_functions_;
 
+	// 着色器程序
+	QOpenGLShaderProgram *shader_program_;
+
 	// 顶点缓存对象
 	QOpenGLVertexArrayObject vao_;
 	QOpenGLBuffer ebo_;
 	QOpenGLBuffer color_vbo_;
 
+	// 视频
 	cv::VideoCapture *capture_;
 	cv::Mat current_mat_;
 
+	// 着色器Uniform位置
+	int uniform_is_border_color_location_;
+
+	// 网格线
+	bool show_grid_line_;
 };

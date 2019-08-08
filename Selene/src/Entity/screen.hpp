@@ -19,6 +19,8 @@ public:
 	Screen(QOpenGLContext *context, QOpenGLShaderProgram *shader_program);
 	~Screen();
 
+	void SetIsPaused(const bool pause);
+	bool GetIsPaused() const;
 	void DrawGrids();
 	void ShowGridLine(const bool show_grid_line);
 
@@ -33,13 +35,15 @@ private:
 	QOpenGLShaderProgram *shader_program_;
 
 	// 顶点缓存对象
-	QOpenGLVertexArrayObject vao_;
-	QOpenGLBuffer ebo_;
-	QOpenGLBuffer color_vbo_;
+	QOpenGLVertexArrayObject grid_vao_;
+	QOpenGLBuffer grid_color_vbo_;
 
 	// 视频
 	cv::VideoCapture *capture_;
 	cv::Mat current_mat_;
+
+	// 是否暂停
+	bool is_paused_;
 
 	// 着色器Uniform位置
 	int uniform_is_border_color_location_;

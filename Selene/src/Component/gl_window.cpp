@@ -162,6 +162,9 @@ void GLWindow::keyPressEvent(QKeyEvent *key_event) {
 	case Qt::Key_D:
 		is_key_d_pressed_ = true;
 		break;
+	case Qt::Key_Space:
+		screen_->SetIsPaused(!screen_->GetIsPaused());
+		break;
 	default:
 		break;
 	}

@@ -120,16 +120,16 @@ void Screen::DrawGrids() {
 		const auto grid_colors = static_cast<QVector3D*>(gl_functions_->glMapBufferRange(GL_ARRAY_BUFFER, 0, sizeof(QVector3D) * grid_counts_, GL_MAP_WRITE_BIT));
 
 		capture_->read(current_mat_);
-		resize(current_mat_, current_mat_, cv::Size(RESOLUTION_X, RESOLUTION_Y));
 
 		const auto mat_rows = current_mat_.rows;
 		const auto mat_cols = current_mat_.cols;
-		const uchar *pixel = current_mat_.data;
 
-		for (auto y = 0; y < mat_rows; y++) {
-			pixel = current_mat_.data + y * current_mat_.step;
-			for (auto x = 0; x < mat_cols; x++)
-				grid_colors[y * RESOLUTION_X + x] = QVector3D(*pixel++, *pixel++, *pixel++) / 255;
+		for (auto y = 0; y < mat_rows; y+=2) {
+			const uchar *pixel = current_mat_.data + y * current_mat_.step;
+			for (auto x = 0; x < mat_cols; x += 2) {
+				grid_colors[y / 2 * RESOLUTION_X + x / 2] = QVector3D(*pixel++, *pixel++, *pixel++) / 255;
+				pixel += 3;
+			}
 		}
 
 		gl_functions_->glUnmapBuffer(GL_ARRAY_BUFFER);

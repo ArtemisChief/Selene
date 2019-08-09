@@ -9,8 +9,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#define RESOLUTION_X 640
-#define RESOLUTION_Y 480
+#define RESOLUTION_X 720
+#define RESOLUTION_Y 540
 
 class Screen {
 

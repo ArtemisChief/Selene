@@ -76,13 +76,14 @@ void GLWindow::ProcessInput() {
 }
 
 void GLWindow::CalibrateFPS() {
-	const int nanoseconds_per_frame = 1.0 / FPS * 1000000;
-	const auto t1 = std::chrono::steady_clock::now();
-	
+	const auto nanoseconds_per_frame = 1000000 / FPS;
+	auto t1 = std::chrono::steady_clock::now();
+
 	while (!should_close_) {
 		const auto t2 = std::chrono::steady_clock::now();
-		if (std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() % nanoseconds_per_frame <= 2000) {
+		if (std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() > nanoseconds_per_frame) {
 			emit fps_time_out();
+			t1 = t2;
 		}
 	}
 }
@@ -115,7 +116,7 @@ void GLWindow::initializeGL() {
 }
 
 void GLWindow::resizeGL(const int w, const int h) {
-	if (zoom_ > 60)
+	if (zoom_ > 20)
 		screen_->ShowGridLine(true);
 	else
 		screen_->ShowGridLine(false);

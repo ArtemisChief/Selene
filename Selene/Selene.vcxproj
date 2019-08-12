@@ -12,16 +12,24 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Component\gl_window.cpp" />
+    <ClCompile Include="src\Component\video_render.cpp" />
     <ClCompile Include="src\Entity\grid.cpp" />
-    <ClCompile Include="src\Entity\screen.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Util\microsecond_timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="src\Component\gl_window.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="src\Util\microsecond_timer.hpp">
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtMultimedia</IncludePath>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtMultimedia</IncludePath>
+    </QtMoc>
+    <QtMoc Include="src\Component\video_render.hpp">
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtMultimedia</IncludePath>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtMultimedia</IncludePath>
+    </QtMoc>
     <ClInclude Include="src\Entity\grid.hpp" />
-    <ClInclude Include="src\Entity\screen.hpp" />
     <ClInclude Include="src\Shader\glsl.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

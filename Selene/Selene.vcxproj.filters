@@ -27,13 +27,22 @@
     <ClCompile Include="src\Entity\grid.cpp">
       <Filter>Entity</Filter>
     </ClCompile>
-    <ClCompile Include="src\Entity\screen.cpp">
-      <Filter>Entity</Filter>
+    <ClCompile Include="src\Component\video_render.cpp">
+      <Filter>Component</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Util\microsecond_timer.cpp">
+      <Filter>Util</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="src\Component\gl_window.hpp">
       <Filter>Component</Filter>
+    </QtMoc>
+    <QtMoc Include="src\Component\video_render.hpp">
+      <Filter>Component</Filter>
+    </QtMoc>
+    <QtMoc Include="src\Util\microsecond_timer.hpp">
+      <Filter>Util</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
@@ -41,9 +50,6 @@
       <Filter>Shader</Filter>
     </ClInclude>
     <ClInclude Include="src\Entity\grid.hpp">
-      <Filter>Entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Entity\screen.hpp">
       <Filter>Entity</Filter>
     </ClInclude>
   </ItemGroup>

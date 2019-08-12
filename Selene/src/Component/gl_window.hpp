@@ -1,11 +1,9 @@
 #pragma once
-#include <iostream>
-#include <QOpenGLWindow>
+#include <QThread>
 #include <QKeyEvent>
-#include <QtConcurrent/QtConcurrent>
-
+#include <QOpenGLWindow>
 #include "src/Shader/glsl.hpp"
-#include "src/Entity/screen.hpp"
+#include "video_render.hpp"
 
 #define FPS 60
 
@@ -19,8 +17,6 @@ public:
 	~GLWindow();
 
 	void ProcessInput();
-
-	void CalibrateFPS();
 
 protected:
 
@@ -55,9 +51,6 @@ private:
 	// Uniform是否已写入值
 	bool is_uniforms_dirty_;
 
-	// 屏幕
-	Screen *screen_;
-
 	// 按键
 	bool is_key_w_pressed_;
 	bool is_key_a_pressed_;
@@ -65,11 +58,5 @@ private:
 	bool is_key_d_pressed_;
 	bool is_key_q_pressed_;
 	bool is_key_e_pressed_;
-
-	// 停止FPS校准线程
-	bool should_close_;
-
-signals:
-	void fps_time_out();
 
 };

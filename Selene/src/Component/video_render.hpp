@@ -1,4 +1,5 @@
 #pragma once
+#include <QObject>
 #include <QVector2D>;
 #include <QVector3D>
 #include <QOpenGLBuffer>
@@ -9,24 +10,33 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#define RESOLUTION_X 720
-#define RESOLUTION_Y 540
+#define RESOLUTION_X 1440
+#define RESOLUTION_Y 1080
 
-class Screen {
+class VideoRender : public QObject {
+
+	Q_OBJECT
 
 public:
 
-	Screen(QOpenGLContext *context, QOpenGLShaderProgram *shader_program);
-	~Screen();
+	static VideoRender* CreateInstance(QOpenGLContext *context, QOpenGLShaderProgram *shader_program);
+	static VideoRender* GetInstance();
 
-	void SetIsPaused(const bool pause);
-	bool GetIsPaused() const;
 	void DrawGrids();
+
 	void ShowGridLine(const bool show_grid_line);
+	void SetIsPaused();
 
 private:
 
-	const int grid_counts_ = RESOLUTION_X * RESOLUTION_Y;
+	//构造函数
+	VideoRender(QOpenGLContext *context, QOpenGLShaderProgram *shader_program);
+
+	// 单例
+	static VideoRender* video_render_;
+
+	// Grid数量
+	static const int GRID_COUNTS = RESOLUTION_X * RESOLUTION_Y;
 
 	// OpenGL函数
 	QOpenGLExtraFunctions *gl_functions_;
@@ -50,4 +60,5 @@ private:
 
 	// 网格线
 	bool show_grid_line_;
+
 };

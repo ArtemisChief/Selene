@@ -1,18 +1,17 @@
 #include "gl_window.hpp"
+#include "src/Util/microsecond_timer.hpp"
 
 GLWindow::GLWindow() : shader_program_(nullptr), uniform_camera_location_(0), uniform_projection_location_(0), zoom_(0),
-                       camera_x_(0), camera_y_(0), is_uniforms_dirty_(true), screen_(nullptr), is_key_w_pressed_(false), 
+                       camera_x_(0), camera_y_(0), is_uniforms_dirty_(true), is_key_w_pressed_(false), 
 					   is_key_a_pressed_(false), is_key_s_pressed_(false), is_key_d_pressed_(false), is_key_q_pressed_(false),
-                       is_key_e_pressed_(false), should_close_(false) {
+                       is_key_e_pressed_(false) {
+
 	m_camera_.setToIdentity();
 	m_projection_.setToIdentity();
-
-	connect(this, SIGNAL(fps_time_out()), this, SLOT(update()));
 }
 
 GLWindow::~GLWindow() {
 	makeCurrent();
-	should_close_ = true;
 	delete shader_program_;
 }
 
@@ -75,19 +74,6 @@ void GLWindow::ProcessInput() {
 	}
 }
 
-void GLWindow::CalibrateFPS() {
-	const auto nanoseconds_per_frame = 1000000 / FPS;
-	auto t1 = std::chrono::steady_clock::now();
-
-	while (!should_close_) {
-		const auto t2 = std::chrono::steady_clock::now();
-		if (std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() > nanoseconds_per_frame) {
-			emit fps_time_out();
-			t1 = t2;
-		}
-	}
-}
-
 void GLWindow::initializeGL() {
 
 	// 使用QOpenGL的ExtraFunctions而不是QOpenGLFunctions，以启用OpenGL3.0以上版本的功能
@@ -108,18 +94,20 @@ void GLWindow::initializeGL() {
 	// 开启多重采样抗锯齿
 	gl_functions->glEnable(GL_MULTISAMPLE);
 
-	// 初始化屏幕
-	screen_ = new Screen(QOpenGLContext::currentContext(), shader_program_);
+	// 初始化视频渲染器，获取OpenGL上下文
+	VideoRender::CreateInstance(QOpenGLContext::currentContext(), shader_program_);
 
-	// 开始校准FPS
-	QtConcurrent::run(this, &GLWindow::CalibrateFPS);
+	// 设置计时器以校准帧率
+	auto timer = new MicrosecondTimer;
+	connect(timer, SIGNAL(TimeOut()), this, SLOT(update()));
+	timer->Start(1000000 / FPS);
 }
 
 void GLWindow::resizeGL(const int w, const int h) {
 	if (zoom_ > 20)
-		screen_->ShowGridLine(true);
+		VideoRender::GetInstance()->ShowGridLine(true);
 	else
-		screen_->ShowGridLine(false);
+		VideoRender::GetInstance()->ShowGridLine(false);
 
 	m_projection_.setColumn(0, QVector4D((1.778f + zoom_ / 10.0) / w, 0, 0, 0));
 	m_projection_.setColumn(1, QVector4D(0, (1.778f + zoom_ / 10.0) / h, 0, 0));
@@ -131,11 +119,6 @@ void GLWindow::resizeGL(const int w, const int h) {
 void GLWindow::paintGL() {
 	ProcessInput();
 
-	auto gl_extra_functions = QOpenGLContext::currentContext()->extraFunctions();
-
-	gl_extra_functions->glClearColor(0, 0, 0, 1);
-	gl_extra_functions->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 	shader_program_->bind();
 
 	if (is_uniforms_dirty_) {
@@ -144,7 +127,7 @@ void GLWindow::paintGL() {
 		shader_program_->setUniformValue(uniform_camera_location_, m_camera_);
 	}
 
-	screen_->DrawGrids();
+	VideoRender::GetInstance()->DrawGrids();
 }
 
 void GLWindow::keyPressEvent(QKeyEvent *key_event) {
@@ -169,7 +152,7 @@ void GLWindow::keyPressEvent(QKeyEvent *key_event) {
 		is_key_d_pressed_ = true;
 		break;
 	case Qt::Key_Space:
-		screen_->SetIsPaused(!screen_->GetIsPaused());
+		VideoRender::GetInstance()->SetIsPaused();
 		break;
 	default:
 		break;

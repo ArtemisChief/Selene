@@ -14,7 +14,7 @@ static const char *vertex_shader_source =
 "	if (isBorderColor)\n"
 "		fColor = vec3(0.0, 0.0, 0.0);\n"
 "	else\n"
-"		fColor = color;\n"
+"		fColor = color / 255;\n"
 "}\0";
 
 static const char *fragment_shader_source =

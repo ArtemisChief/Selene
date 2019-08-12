@@ -120,7 +120,7 @@ void VideoRender::DrawGrids() {
 		const uchar *pixel = current_mat_.data;
 
 		for (auto j = 0; j < pixel_channel_sum; j++) 
-			*grid_colors++ = *pixel++ / 255.0;
+			*grid_colors++ = *pixel++;
 
 		gl_functions_->glUnmapBuffer(GL_ARRAY_BUFFER);
 

@@ -26,7 +26,7 @@ VideoRender::VideoRender(QOpenGLContext *context, QOpenGLShaderProgram *shader_p
 	gl_functions_->glLineWidth(0.1f);
 
 	// 设置Grid实例化渲染中每一个Grid的偏移量
-	const auto grid_offsets = new QVector2D[GRID_COUNTS];
+	const auto grid_offsets = new QVector2D[grids_quantity_];
 	auto index = 0;
 	const auto distance = 2;
 	const auto range_x = RESOLUTION_X * distance / 2;
@@ -46,23 +46,16 @@ VideoRender::VideoRender(QOpenGLContext *context, QOpenGLShaderProgram *shader_p
 	offset_vbo.create();
 	offset_vbo.bind();
 	offset_vbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
-	offset_vbo.allocate(grid_offsets, sizeof(QVector2D) * GRID_COUNTS);
+	offset_vbo.allocate(grid_offsets, sizeof(QVector2D) * grids_quantity_);
 	offset_vbo.release();
 	delete[] grid_offsets;
 
-	// 设置Grid实例化渲染中每一个Grid的颜色初始为黑色
-	const auto grid_colors = new QVector3D[GRID_COUNTS];
-	for (auto i = 0; i < GRID_COUNTS; i++)
-		grid_colors[i++] = QVector3D(0.0f, 0.0f, 0.0f);
-
 	// 设置颜色Buffer
-	grid_color_vbo_ = QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
-	grid_color_vbo_.create();
-	grid_color_vbo_.bind();
-	grid_color_vbo_.setUsagePattern(QOpenGLBuffer::StreamDraw);
-	grid_color_vbo_.allocate(grid_colors, sizeof(QVector3D) * GRID_COUNTS);
-	grid_color_vbo_.release();
-	delete[] grid_colors;
+	grids_color_vbo_ = QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
+	grids_color_vbo_.create();
+	grids_color_vbo_.bind();
+	grids_color_vbo_.setUsagePattern(QOpenGLBuffer::DynamicCopy);
+	grids_color_vbo_.release();
 
 	// 设置顶点坐标数组对象与Buffer
 	grid_vao_.create();
@@ -87,9 +80,9 @@ VideoRender::VideoRender(QOpenGLContext *context, QOpenGLShaderProgram *shader_p
 
 	// 设置顶点属性-颜色
 	gl_functions_->glEnableVertexAttribArray(2);
-	grid_color_vbo_.bind();
-	gl_functions_->glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(nullptr));
-	grid_color_vbo_.release();
+	grids_color_vbo_.bind();
+	gl_functions_->glVertexAttribPointer(2, 3, GL_UNSIGNED_BYTE, GL_FALSE, 3 * sizeof(uchar), static_cast<void*>(nullptr));
+	grids_color_vbo_.release();
 	gl_functions_->glVertexAttribDivisor(2, 1);
 
 	vbo.release();
@@ -108,36 +101,24 @@ VideoRender* VideoRender::GetInstance() {
 
 void VideoRender::DrawGrids() {
 
+	gl_functions_->glClear(GL_COLOR_BUFFER_BIT);
+
 	if (!is_paused_) {
 		// 更新所有Grid颜色
-		grid_color_vbo_.bind();
-
-		const auto pixel_channel_sum = GRID_COUNTS * 3;
-		auto grid_colors = static_cast<float*>(gl_functions_->glMapBufferRange(GL_ARRAY_BUFFER, 0, sizeof(float) * pixel_channel_sum, GL_MAP_WRITE_BIT));
-
-		capture_->read(current_mat_);
-
-		const uchar *pixel = current_mat_.data;
-
-		for (auto j = 0; j < pixel_channel_sum; j++) 
-			*grid_colors++ = *pixel++;
-
-		gl_functions_->glUnmapBuffer(GL_ARRAY_BUFFER);
-
-		grid_color_vbo_.release();
+		capture_->read(current_frame_);
+		grids_color_vbo_.bind();
+		grids_color_vbo_.allocate(current_frame_.data, sizeof(uchar) * grids_quantity_ * 3);
+		grids_color_vbo_.release();
 	}
 
 	// 绘制Grid
-
-	gl_functions_->glClear(GL_COLOR_BUFFER_BIT);
-
 	grid_vao_.bind();
 
-	gl_functions_->glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, Grid::GRID_INDICES, GRID_COUNTS);
+	gl_functions_->glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, Grid::GRID_INDICES, grids_quantity_);
 
 	if (show_grid_line_) {
 		shader_program_->setUniformValue(uniform_is_border_color_location_, true);
-		gl_functions_->glDrawArraysInstanced(GL_LINE_LOOP, 0, 4, GRID_COUNTS);
+		gl_functions_->glDrawArraysInstanced(GL_LINE_LOOP, 0, 4, grids_quantity_);
 		shader_program_->setUniformValue(uniform_is_border_color_location_, false);
 	}
 

@@ -61,7 +61,7 @@ void GLWindow::ProcessInput() {
 			zoom_ += 5;
 		else if (zoom_ < 480)
 			zoom_ += 10;
-		resizeGL(1280, 960);
+		resizeGL(width(), height());
 	}
 	else if (is_key_q_pressed_) {
 		if (zoom_ > 40)
@@ -70,7 +70,7 @@ void GLWindow::ProcessInput() {
 			zoom_ -= 5;
 		else if (zoom_ > 0)
 			zoom_ -= 2;
-		resizeGL(1280, 960);
+		resizeGL(width(), height());
 	}
 }
 
@@ -109,8 +109,8 @@ void GLWindow::resizeGL(const int w, const int h) {
 	else
 		VideoRender::GetInstance()->ShowGridLine(false);
 
-	m_projection_.setColumn(0, QVector4D((1.778f + zoom_ / 10.0) / w, 0, 0, 0));
-	m_projection_.setColumn(1, QVector4D(0, (1.778f + zoom_ / 10.0) / h, 0, 0));
+	m_projection_.setColumn(0, QVector4D((0.88889f + zoom_ / 10.0) / w, 0, 0, 0));
+	m_projection_.setColumn(1, QVector4D(0, (0.88889f + zoom_ / 10.0) / h, 0, 0));
 	m_projection_.setColumn(2, QVector4D(0, 0, 1, 0));
 	m_projection_.setColumn(3, QVector4D(0, 0, 0, 1));
 	is_uniforms_dirty_ = true;

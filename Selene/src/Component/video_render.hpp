@@ -36,7 +36,7 @@ private:
 	static VideoRender* video_render_;
 
 	// Grid数量
-	static const int GRID_COUNTS = RESOLUTION_X * RESOLUTION_Y;
+	const int grids_quantity_ = RESOLUTION_X * RESOLUTION_Y;
 
 	// OpenGL函数
 	QOpenGLExtraFunctions *gl_functions_;
@@ -46,11 +46,11 @@ private:
 
 	// 顶点缓存对象
 	QOpenGLVertexArrayObject grid_vao_;
-	QOpenGLBuffer grid_color_vbo_;
+	QOpenGLBuffer grids_color_vbo_;
 
 	// 视频
 	cv::VideoCapture *capture_;
-	cv::Mat current_mat_;
+	cv::Mat current_frame_;
 
 	// 是否暂停
 	bool is_paused_;

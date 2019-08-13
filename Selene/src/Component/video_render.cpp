@@ -102,10 +102,13 @@ VideoRender* VideoRender::GetInstance() {
 void VideoRender::DrawGrids() {
 
 	gl_functions_->glClear(GL_COLOR_BUFFER_BIT);
-
+	
+	// 更新所有Grid颜色
 	if (!is_paused_) {
-		// 更新所有Grid颜色
 		capture_->read(current_frame_);
+		// 三次样条插值，速度比默认的线性插值快
+		resize(current_frame_, current_frame_, cv::Size(RESOLUTION_X, RESOLUTION_Y),0,0, cv::INTER_CUBIC); 
+
 		grids_color_vbo_.bind();
 		grids_color_vbo_.allocate(current_frame_.data, sizeof(uchar) * grids_quantity_ * 3);
 		grids_color_vbo_.release();

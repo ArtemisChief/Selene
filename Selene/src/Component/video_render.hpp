@@ -10,8 +10,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#define RESOLUTION_X 1440
-#define RESOLUTION_Y 1080
+#define RESOLUTION_X 720
+#define RESOLUTION_Y 540
 
 class VideoRender : public QObject {
 
